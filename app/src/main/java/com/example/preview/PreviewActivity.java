@@ -56,7 +56,9 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
      */
 
     private Camera getCamera() {
-        DisplayMetrics dm = getResources().getDisplayMetrics();
+//        DisplayMetrics dm = getResources().getDisplayMetrics();
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
         int width = dm.widthPixels;
         int height = dm.heightPixels;
         Log.i(TAG, "getCamera: width = " + width + "height = " + height);
@@ -66,7 +68,7 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
             camera = Camera.open();
             camera.setDisplayOrientation(90);
             Camera.Parameters params = camera.getParameters();
-            Camera.Size preSize = PreviewSize.getBestPreviewSize(true, 1080, 1584,
+            Camera.Size preSize = PreviewSize.getBestPreviewSize(true, width, height,
                     params.getSupportedPreviewSizes());
             params.setPreviewSize(preSize.width, preSize.height);
             Log.i(TAG, "getCamera: preSize.width = " + preSize.width + " preSize.height = " + preSize.height);
@@ -166,6 +168,8 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
         Log.d(TAG, "onDestroy: ");
     }
 
+
+
     @Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
 //        Thread thread = new Thread();
@@ -178,7 +182,10 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
 //        String data  = Arrays.toString(bytes);
 //        Log.i(TAG, "onPreviewFrame: data = " + data);
 //        data = null;
+
     }
+
+
 
 
 //    private void getPreviewImage() {
