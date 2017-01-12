@@ -2,25 +2,14 @@ package com.example.preview;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.hardware.Camera;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.util.Arrays;
 
 /**
  * Created by Freedom.Ly on 2017-1-10 16:29
@@ -31,6 +20,8 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
     Camera mCamera;
     SurfaceView mSurfaceView;
     SurfaceHolder mSurfaceHolder;
+    int mWidth;
+    int mHeight;
 
     private final String TAG = "Preview";
 
@@ -48,16 +39,38 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
         mCamera = getCamera();
+//        ViewTreeObserver vto = mSurfaceView.getViewTreeObserver();
+//        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+//            @Override
+//            public void onGlobalLayout() {
+//                mSurfaceView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+//                mWidth = mSurfaceView.getWidth();
+//                mHeight = mSurfaceView.getHeight();
+//                Log.i(TAG, "onGlobalLayout: w = " + mWidth + " h = " + mHeight);
+//            }
+//        });
     }
 
     /**
      * 初始化相机
      */
+
     private Camera getCamera() {
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int width = dm.widthPixels;
+        int height = dm.heightPixels;
+        Log.i(TAG, "getCamera: width = " + width + "height = " + height);
+
         Camera camera;
         try {
             camera = Camera.open();
             camera.setDisplayOrientation(90);
+            Camera.Parameters params = camera.getParameters();
+            Camera.Size preSize = PreviewSize.getBestPreviewSize(true, 1080, 1584,
+                    params.getSupportedPreviewSizes());
+            params.setPreviewSize(preSize.width, preSize.height);
+            Log.i(TAG, "getCamera: preSize.width = " + preSize.width + " preSize.height = " + preSize.height);
+            camera.setParameters(params);
         } catch (Exception e) {
             camera = null;
         }
@@ -96,7 +109,6 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
     private boolean checkCameraHardware(Context context) {
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
-
 
 
     @Override
@@ -156,16 +168,16 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
 
     @Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
-        Thread thread = new Thread();
-        try {
-            thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        Thread thread = new Thread();
+//        try {
+//            thread.sleep(10000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         Log.d(TAG, "onPreviewFrame: Get Preview Frame");
-        String data  = Arrays.toString(bytes);
-        Log.i(TAG, "onPreviewFrame: data = " + data);
-        data = null;
+//        String data  = Arrays.toString(bytes);
+//        Log.i(TAG, "onPreviewFrame: data = " + data);
+//        data = null;
     }
 
 
