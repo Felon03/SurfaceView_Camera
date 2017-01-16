@@ -178,6 +178,7 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
+
         Log.d(TAG, "onPreviewFrame: Get Preview Frame");
         Util.showToast(this, "Get preview frames");
 //        String data  = Arrays.toString(bytes);
