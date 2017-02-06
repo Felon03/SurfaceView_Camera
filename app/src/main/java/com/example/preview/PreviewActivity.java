@@ -1,15 +1,25 @@
 package com.example.preview;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicYuvToRGB;
+import android.renderscript.Type;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Created by Freedom.Ly on 2017-1-10 16:29
@@ -23,6 +33,10 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
     int mWidth;
     int mHeight;
 
+    private RenderScript rs;
+    private ScriptIntrinsicYuvToRGB yuvToRgbIntrinsic;
+    private Type.Builder yuvType, rgbaType;
+    private Allocation in, out;
     private final String TAG = "Preview";
 
 
@@ -32,6 +46,9 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
         setContentView(R.layout.activity_preview);
 
         initViews();
+        rs = RenderScript.create(this);
+        yuvToRgbIntrinsic = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
+
     }
 
     private void initViews() {
@@ -73,6 +90,9 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
             params.setPreviewSize(preSize.width, preSize.height);
             Log.i(TAG, "getCamera: preSize.width = " + preSize.width + " preSize.height = " + preSize.height);
             camera.setParameters(params);
+
+            mWidth = preSize.width;
+            mHeight = preSize.height;
         } catch (Exception e) {
             camera = null;
         }
@@ -178,9 +198,39 @@ public class PreviewActivity extends AppCompatActivity implements SurfaceHolder.
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         Log.d(TAG, "onPreviewFrame: Get Preview Frame");
         Util.showToast(this, "Get preview frames");
+        if (yuvType == null) {
+            yuvType = new Type.Builder(rs, Element.U8(rs)).setX(bytes.length);
+            in = Allocation.createTyped(rs, yuvType.create(), Allocation.USAGE_SCRIPT);
+
+            rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(mWidth).setY(mHeight);
+            out = Allocation.createTyped(rs, rgbaType.create(), Allocation.USAGE_SCRIPT);
+        }
+
+        in.copyFrom(bytes);
+
+        yuvToRgbIntrinsic.setInput(in);
+        yuvToRgbIntrinsic.forEach(out);
+
+        Bitmap bmpOut = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
+        out.copyTo(bmpOut);
+
+
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bmpOut.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] bitmapByte =baos.toByteArray();
+
+        Intent intent = new Intent(PreviewActivity.this, CaptureActivity.class);
+        intent.putExtra("bitmap",bitmapByte);
+        startActivity(intent);
 //        String data  = Arrays.toString(bytes);
 //        Log.i(TAG, "onPreviewFrame: data = " + data);
 //        data = null;
